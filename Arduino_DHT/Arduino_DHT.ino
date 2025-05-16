@@ -1,5 +1,65 @@
 #include <Arduino.h>
 #include <Ultrasonic.h>
+#include "DHT.h"
+#include <LedControlMS.h>
+
+// LED矩陣設定
+#define DATA_PIN 19  // DIN腳位
+#define CLK_PIN 21   // CLK腳位
+#define CS_PIN 18    // CS腳位
+#define NBR_MTX 1    // 1個8x8矩陣
+LedControl lc = LedControl(DATA_PIN, CLK_PIN, CS_PIN, NBR_MTX);
+
+// LED矩陣跑馬燈相關變數
+String scrollText = "";          // 跑馬燈顯示文字
+int textPosition = 0;            // 當前顯示位置
+unsigned long scrollDelay = 300; // 跑馬燈延遲時間(毫秒)
+bool isTemperature = true;       // 是否顯示溫度(否則顯示濕度)
+
+// 字符定義 (0-9 C, %)
+byte digits[10][8] = {
+  {B00111000, B01000100, B01000100, B01000100, B01000100, B01000100, B00111000, B00000000}, // 0
+  {B00010000, B00110000, B00010000, B00010000, B00010000, B00010000, B00111000, B00000000}, // 1
+  {B00111000, B01000100, B00000100, B00001000, B00010000, B00100000, B01111100, B00000000}, // 2
+  {B00111000, B01000100, B00000100, B00011000, B00000100, B01000100, B00111000, B00000000}, // 3
+  {B00000100, B00001100, B00010100, B00100100, B01111100, B00000100, B00000100, B00000000}, // 4
+  {B01111100, B01000000, B01111000, B00000100, B00000100, B01000100, B00111000, B00000000}, // 5
+  {B00111000, B01000100, B01000000, B01111000, B01000100, B01000100, B00111000, B00000000}, // 6
+  {B01111100, B00000100, B00001000, B00010000, B00100000, B00100000, B00100000, B00000000}, // 7
+  {B00111000, B01000100, B01000100, B00111000, B01000100, B01000100, B00111000, B00000000}, // 8
+  {B00111000, B01000100, B01000100, B00111100, B00000100, B01000100, B00111000, B00000000}  // 9
+};
+
+// 修改符號定義
+byte symbols[2][8] = {
+  // 百分比符號 (%)，使用用戶提供的新定義
+  {
+    B11100001,
+    B10100010,
+    B11100100,
+    B00001000,
+    B00010000,
+    B00100111,
+    B01000101,
+    B10000111
+  },
+  // 度數符號 (°)，使用用戶提供的新定義
+  {
+    B11100000,
+    B10100000,
+    B11100000,
+    B00011111,
+    B00010000,
+    B00010000,
+    B00010000,
+    B00011111
+  }
+};
+
+// DHT溫濕度感測器設定
+#define DHTPIN 25         // DHT11連接到25腳位
+#define DHTTYPE DHT11     // 感測器類型為DHT11
+DHT dht1(DHTPIN, DHTTYPE);
 
 // 超音波感測器設定（久坐提醒功能）
 Ultrasonic ultrasonic(16, 17);  // 使用16做為Trig腳位，17做為Echo腳位
@@ -41,7 +101,7 @@ int MAX_LIGHT = 500;   // 暗環境的值（較高讀數）
 
 // 久坐提醒相關變數
 const int DISTANCE_THRESHOLD = 50;       // 距離閾值（小於50cm被視為坐下）
-const unsigned long SITTING_TIME_THRESHOLD = 10000;  // 久坐時間閾值（10秒用於測試）
+const unsigned long SITTING_TIME_THRESHOLD = 600000;  // 久坐時間閾值（10秒用於測試）
 unsigned long sittingStartTime = 0;      // 開始坐下的時間
 bool isSitting = false;                  // 目前是否坐著
 bool alarmActive = false;                // 警報是否啟動
@@ -50,12 +110,33 @@ bool alarmActive = false;                // 警報是否啟動
 unsigned long lastLightCheckTime = 0;    // 上次檢查光線的時間
 unsigned long lastDistanceCheckTime = 0; // 上次檢查距離的時間
 unsigned long lastPWMTime = 0;           // 上次PWM更新時間
+unsigned long lastDHTReadTime = 0;       // 上次讀取溫濕度的時間
+unsigned long lastScrollTime = 0;        // 上次捲動文字的時間
+unsigned long lastTextChangeTime = 0;    // 上次切換顯示內容的時間
 
 // 存儲當前LED亮度
 int currentBrightness = 0;
 
+// 存儲溫濕度數據
+float temperature = 0;
+float humidity = 0;
+
+// 新增：用於顯示的溫濕度數據
+float displayTemperature = 0;
+float displayHumidity = 0;
+
 void setup() {
   Serial.begin(115200);
+  
+  // 初始化DHT溫濕度感測器
+  dht1.begin();
+  
+  // 初始化LED矩陣
+  for (int i = 0; i < NBR_MTX; i++) {
+    lc.shutdown(i, false);  // 喚醒顯示
+    lc.setIntensity(i, 8);  // 設定亮度 (0-15)
+    lc.clearDisplay(i);     // 清除顯示
+  }
   
   // 光控LED設定
   pinMode(ledPin, OUTPUT);
@@ -67,6 +148,9 @@ void setup() {
   
   Serial.println("系統初始化完成...");
   delay(1000);
+  
+  // 初始化跑馬燈文字
+  updateScrollText();
 }
 
 // 閃爍紅燈函數
@@ -162,15 +246,139 @@ void handleSittingReminder() {
     }
   } else {
     // 距離測量異常
-    Serial.println("距離測量異常，請檢查感測器連接");
+    //Serial.println("距離測量異常，請檢查感測器連接");
+  }
+}
+
+// 處理DHT11溫濕度感測
+void handleDHTSensor() {
+  // 讀取溫濕度
+  humidity = dht1.readHumidity();
+  temperature = dht1.readTemperature();
+  
+  // 檢查是否讀取失敗
+  if (isnan(humidity) || isnan(temperature)) {
+    Serial.println("無法從DHT感測器讀取數據!");
+    return;
+  }
+  
+  // 讀取成功後，更新顯示用的溫濕度變數
+  displayTemperature = temperature;
+  displayHumidity = humidity;
+  
+  // 顯示溫濕度
+  Serial.print("相對溼度: ");
+  Serial.print(humidity);
+  Serial.println(" %");
+  
+  Serial.print("攝氏溫度: ");
+  Serial.print(temperature);
+  Serial.println(" °C");
+  
+  Serial.println("--------------------");
+  
+  // 更新跑馬燈顯示文字
+  updateScrollText();
+}
+
+// 更新跑馬燈顯示文字
+void updateScrollText() {
+  if (isTemperature) {
+    // 只顯示溫度數值和單位，使用顯示用的溫度變數
+    scrollText = String((int)displayTemperature) + "C";
+  } else {
+    // 只顯示濕度數值和單位，使用顯示用的濕度變數
+    scrollText = String((int)displayHumidity) + "%";
+  }
+  
+  // 重置文字位置
+  textPosition = 0;
+  
+  Serial.print("更新跑馬燈文字: ");
+  Serial.println(scrollText);
+}
+
+// 在LED矩陣上顯示一個字符
+void displayChar(int addr, char c) {
+  lc.clearDisplay(addr);
+  
+  byte charPattern[8]; // 暫存字符圖案
+  
+  if (c >= '0' && c <= '9') {
+    // 數字 0-9
+    int index = c - '0';
+    // 複製圖案到暫存陣列
+    for (int i = 0; i < 8; i++) {
+      charPattern[i] = digits[index][i];
+    }
+  } else if (c == '%') {
+    // 百分比符號
+    for (int i = 0; i < 8; i++) {
+      charPattern[i] = symbols[0][i];
+    }
+  } else if (c == 'C') {
+    // 攝氏度符號，使用度數符號
+    for (int i = 0; i < 8; i++) {
+      charPattern[i] = symbols[1][i];
+    }
+  } else if (c == ':') {
+    // 冒號的特殊處理
+    memset(charPattern, 0, 8); // 清空字符圖案
+    lc.setLed(addr, 3, 7-2, true); // 上下翻轉
+    lc.setLed(addr, 3, 7-5, true); // 上下翻轉
+    return;
+  } else {
+    return; // 不支援的字符，直接返回
+  }
+  
+  // 向右旋轉90度並顯示
+  // 旋轉方法：將8x8矩陣中的(x,y)變成(y,7-x)
+  for (int row = 0; row < 8; row++) {
+    for (int col = 0; col < 8; col++) {
+      if (bitRead(charPattern[row], 7-col)) { // 檢查原始圖案的位元
+        lc.setLed(addr, col, 7-row, true); // 旋轉後設置LED，並上下翻轉
+      }
+    }
+  }
+}
+
+// 顯示跑馬燈文字
+void scrollMatrixText() {
+  if (scrollText.length() == 0) return;
+  
+  // 顯示當前位置的字符
+  if (textPosition < scrollText.length()) {
+    char currentChar = scrollText.charAt(textPosition);
+    displayChar(0, currentChar);
+    
+    Serial.print("顯示字符: ");
+    Serial.println(currentChar);
+  } else {
+    lc.clearDisplay(0);  // 清除顯示
+  }
+  
+  // 更新位置
+  textPosition++;
+  
+  // 如果文字已經全部顯示完，重新開始
+  if (textPosition >= scrollText.length() + 2) {  // 加2是為了在末尾增加一些空白時間
+    textPosition = 0;
+    
+    // 檢查是否需要切換顯示內容
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastTextChangeTime >= 10000) {
+      lastTextChangeTime = currentMillis;
+      isTemperature = !isTemperature;
+      updateScrollText(); // 在完整顯示一輪後才更新文字
+    }
   }
 }
 
 void loop() {
   unsigned long currentMillis = millis();
   
-  // 處理光敏電阻控制LED亮度 (每500ms執行一次)
-  if (currentMillis - lastLightCheckTime >= 500) {
+  // 處理光敏電阻控制LED亮度 (每1000ms執行一次)
+  if (currentMillis - lastLightCheckTime >= 1000) {
     lastLightCheckTime = currentMillis;
     handleLightControl();
   }
@@ -179,6 +387,18 @@ void loop() {
   if (currentMillis - lastDistanceCheckTime >= 1000) {
     lastDistanceCheckTime = currentMillis;
     handleSittingReminder();
+  }
+  
+  // 處理DHT11溫濕度感測 (每10000ms執行一次)
+  if (currentMillis - lastDHTReadTime >= 5000) {
+    lastDHTReadTime = currentMillis;
+    handleDHTSensor();
+  }
+  
+  // 更新LED矩陣顯示 (每800ms捲動一次)
+  if (currentMillis - lastScrollTime >= 800) {
+    lastScrollTime = currentMillis;
+    scrollMatrixText();
   }
   
   // 持續更新LED PWM (每1ms更新一次，保持恆亮效果)
