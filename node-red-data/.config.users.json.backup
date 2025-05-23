@@ -14,11 +14,16 @@
             },
             "tours": {
                 "welcome": "4.0.9"
+            },
+            "dialog": {
+                "export": {
+                    "pretty": true
+                }
             }
         },
         "menu-menu-item-palette": true,
         "debug": {
-            "filter": "filterCurrent"
+            "filter": "filterSelected"
         }
     }
 }

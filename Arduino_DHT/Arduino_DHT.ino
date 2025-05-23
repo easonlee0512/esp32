@@ -297,6 +297,9 @@ void setup() {
   // 初始化蜂鳴器
   pinMode(BUZZER_PIN, OUTPUT);
   
+  // 初始化顯示切換時間
+  lastTextChangeTime = millis();
+  
   Serial.println("系統初始化完成...");
   delay(1000);
   
@@ -527,16 +530,18 @@ void scrollMatrixText() {
   // 更新位置
   textPosition++;
   
-  // 如果文字已經全部顯示完，重新開始
+  // 如果文字已經全部顯示完，循環次數計數器增加
+  static int displayCycles = 0;
   if (textPosition >= scrollText.length() + 2) {  // 加2是為了在末尾增加一些空白時間
     textPosition = 0;
+    displayCycles++;
     
-    // 檢查是否需要切換顯示內容
-    unsigned long currentMillis = millis();
-    if (currentMillis - lastTextChangeTime >= 10000) {
-      lastTextChangeTime = currentMillis;
+    // 每顯示完2次完整內容，切換到另一種顯示
+    if (displayCycles >= 1) {
+      displayCycles = 0;
       isTemperature = !isTemperature;
-      updateScrollText(); // 在完整顯示一輪後才更新文字
+      updateScrollText();
+      Serial.println("切換顯示內容: " + String(isTemperature ? "溫度" : "濕度"));
     }
   }
 }
