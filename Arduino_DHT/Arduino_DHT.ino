@@ -2,6 +2,8 @@
 #include <Ultrasonic.h>
 #include "DHT.h"
 #include <LedControlMS.h>
+#include <WiFi.h>          // 加入WiFi庫
+#include <PubSubClient.h>  // 加入MQTT庫
 
 // LED矩陣設定
 #define DATA_PIN 19  // DIN腳位
@@ -9,6 +11,29 @@
 #define CS_PIN 18    // CS腳位
 #define NBR_MTX 1    // 1個8x8矩陣
 LedControl lc = LedControl(DATA_PIN, CLK_PIN, CS_PIN, NBR_MTX);
+
+// WiFi設定
+const char* ssid = "李翊辰的iPhone";         // 請修改為您的WiFi名稱
+const char* password = "11000000";     // 請修改為您的WiFi密碼
+
+// MQTT設定
+const char* mqtt_server = "172.20.10.5";   // 修改為您電腦的實際IP地址
+const int mqtt_port = 1883;                // MQTT伺服器埠號
+const char* mqtt_client_id = "ESP32-SmartLamp"; // MQTT客戶端ID
+const char* mqtt_user = "";                // MQTT使用者名稱，如果有需要
+const char* mqtt_password = "";            // MQTT密碼，如果有需要
+
+// MQTT主題
+const char* topic_environment = "smartlamp/environment"; // 環境數據（溫濕度、光敏）
+const char* topic_reminder = "smartlamp/reminder";      // 久坐提醒狀態
+
+// 建立WiFi和MQTT客戶端
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+// 上次發布MQTT消息的時間
+unsigned long lastMqttPublishTime = 0;
+const long mqttPublishInterval = 5000;  // 每5秒發布一次數據
 
 // LED矩陣跑馬燈相關變數
 String scrollText = "";          // 跑馬燈顯示文字
@@ -66,34 +91,14 @@ Ultrasonic ultrasonic(16, 17);  // 使用16做為Trig腳位，17做為Echo腳位
 
 // LED設定（光控功能）
 int ledPin = 26;          // LED接腳
-int lightSensorPin = 27;  // 光敏電阻接腳
-
-// Arduino analogWrite模擬 (ESP32沒有原生的analogWrite)
-void analogWriteESP(uint8_t pin, uint8_t value) {
-  // 用1kHz頻率生成PWM
-  int freq = 1000;
-  int high = value * freq / 255;
-  int low = freq - high;
-  
-  // 若設定為0或255，直接設置高低電平即可
-  if (value == 0) {
-    digitalWrite(pin, LOW);
-    return;
-  } else if (value == 255) {
-    digitalWrite(pin, HIGH);
-    return;
-  }
-  
-  // 保持高電平
-  digitalWrite(pin, HIGH);
-  delayMicroseconds(high);
-  // 保持低電平
-  digitalWrite(pin, LOW);
-  delayMicroseconds(low);
-}
+int lightSensorPin = 34;  // 光敏電阻接腳
 
 // 紅燈設定（久坐提醒功能）
 const int redLedPin = 5;  // 紅燈接腳位5
+
+// 使用軟體模擬PWM的變數
+unsigned long lastPwmTime = 0;
+const int pwmCycleTime = 20; // PWM週期 (毫秒)
 
 // 光敏電阻閾值設定
 int MIN_LIGHT = 0;     // 亮環境的值（較低讀數）
@@ -101,7 +106,7 @@ int MAX_LIGHT = 500;   // 暗環境的值（較高讀數）
 
 // 久坐提醒相關變數
 const int DISTANCE_THRESHOLD = 50;       // 距離閾值（小於50cm被視為坐下）
-const unsigned long SITTING_TIME_THRESHOLD = 600000;  // 久坐時間閾值（10秒用於測試）
+const unsigned long SITTING_TIME_THRESHOLD = 600000;  // 久坐時間閾值（10分鐘）
 unsigned long sittingStartTime = 0;      // 開始坐下的時間
 bool isSitting = false;                  // 目前是否坐著
 bool alarmActive = false;                // 警報是否啟動
@@ -109,10 +114,10 @@ bool alarmActive = false;                // 警報是否啟動
 // 計時變數（控制功能執行頻率）
 unsigned long lastLightCheckTime = 0;    // 上次檢查光線的時間
 unsigned long lastDistanceCheckTime = 0; // 上次檢查距離的時間
-unsigned long lastPWMTime = 0;           // 上次PWM更新時間
 unsigned long lastDHTReadTime = 0;       // 上次讀取溫濕度的時間
 unsigned long lastScrollTime = 0;        // 上次捲動文字的時間
 unsigned long lastTextChangeTime = 0;    // 上次切換顯示內容的時間
+unsigned long lastLedUpdateTime = 0;     // 上次更新LED亮度的時間
 
 // 存儲當前LED亮度
 int currentBrightness = 0;
@@ -125,8 +130,86 @@ float humidity = 0;
 float displayTemperature = 0;
 float displayHumidity = 0;
 
+// 連接WiFi網路
+void setup_wifi() {
+  delay(10);
+  Serial.println();
+  Serial.print("連接到WiFi網路: ");
+  Serial.println(ssid);
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("WiFi已連接");
+  Serial.print("IP地址: ");
+  Serial.println(WiFi.localIP());
+}
+
+// 重新連接MQTT伺服器
+void reconnect() {
+  // 設定重連嘗試次數
+  int attempts = 0;
+  
+  // 嘗試連接，但限制最大重試次數，避免長時間阻塞
+  while (!client.connected() && attempts < 3) {
+    attempts++;
+    Serial.print("嘗試MQTT連接...");
+    // 嘗試連接
+    if (client.connect(mqtt_client_id, mqtt_user, mqtt_password)) {
+      Serial.println("已連接");
+      
+      // 發送連接成功消息
+      client.publish(topic_environment, "ESP32已連接");
+      return;  // 連接成功直接返回
+    } else {
+      Serial.print("連接失敗, rc=");
+      Serial.print(client.state());
+      Serial.print(" 嘗試: ");
+      Serial.print(attempts);
+      Serial.println("/3");
+      delay(1000);  // 短暫延遲後重試
+    }
+  }
+  
+  if (!client.connected()) {
+    Serial.println("MQTT連接失敗，將在下一循環重試");
+  }
+}
+
+// 使用軟體模擬PWM控制LED亮度
+void softPWM(int pin, int brightness) {
+  unsigned long currentTime = millis();
+  
+  // 計算應該開啟的時間比例
+  int onTime = map(brightness, 0, 255, 0, pwmCycleTime);
+  
+  // 在一個PWM週期內
+  if (currentTime - lastPwmTime < pwmCycleTime) {
+    // 在onTime時間內保持高電平
+    if (currentTime - lastPwmTime < onTime) {
+      digitalWrite(pin, HIGH);
+    } else {
+      digitalWrite(pin, LOW);
+    }
+  } else {
+    // 重置PWM週期
+    lastPwmTime = currentTime;
+  }
+}
+
 void setup() {
   Serial.begin(115200);
+  
+  // 初始化WiFi
+  setup_wifi();
+  
+  // 設置MQTT伺服器和回調函數
+  client.setServer(mqtt_server, mqtt_port);
   
   // 初始化DHT溫濕度感測器
   dht1.begin();
@@ -374,13 +457,58 @@ void scrollMatrixText() {
   }
 }
 
+// 發布環境數據到MQTT
+void publishEnvironmentData() {
+  // 建立JSON格式的環境數據
+  String jsonData = "{";
+  jsonData += "\"temperature\":" + String(temperature) + ",";
+  jsonData += "\"humidity\":" + String(humidity) + ",";
+  jsonData += "\"light\":" + String(analogRead(lightSensorPin));
+  jsonData += "}";
+  
+  // 發布到環境數據主題
+  client.publish(topic_environment, jsonData.c_str());
+  Serial.println("已發布環境數據到MQTT");
+}
+
+// 發布久坐提醒狀態到MQTT
+void publishReminderStatus() {
+  String status = "{";
+  status += "\"sitting\":" + String(isSitting ? "true" : "false") + ",";
+  status += "\"alarm\":" + String(alarmActive ? "true" : "false") + ",";
+  
+  if (isSitting) {
+    unsigned long sittingDuration = millis() - sittingStartTime;
+    status += "\"duration\":" + String(sittingDuration / 1000);
+  } else {
+    status += "\"duration\":0";
+  }
+  
+  status += "}";
+  
+  client.publish(topic_reminder, status.c_str());
+  Serial.println("已發布久坐提醒狀態到MQTT");
+}
+
 void loop() {
   unsigned long currentMillis = millis();
+  
+  // 檢查MQTT連接狀態
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
   
   // 處理光敏電阻控制LED亮度 (每1000ms執行一次)
   if (currentMillis - lastLightCheckTime >= 1000) {
     lastLightCheckTime = currentMillis;
     handleLightControl();
+  }
+  
+  // 使用軟體模擬PWM控制LED亮度 (每1ms更新一次)
+  if (currentMillis - lastLedUpdateTime >= 1) {
+    lastLedUpdateTime = currentMillis;
+    softPWM(ledPin, currentBrightness);
   }
   
   // 處理超聲波感測器久坐提醒 (每1000ms執行一次)
@@ -389,7 +517,7 @@ void loop() {
     handleSittingReminder();
   }
   
-  // 處理DHT11溫濕度感測 (每10000ms執行一次)
+  // 處理DHT11溫濕度感測 (每5000ms執行一次)
   if (currentMillis - lastDHTReadTime >= 5000) {
     lastDHTReadTime = currentMillis;
     handleDHTSensor();
@@ -401,10 +529,13 @@ void loop() {
     scrollMatrixText();
   }
   
-  // 持續更新LED PWM (每1ms更新一次，保持恆亮效果)
-  if (currentMillis - lastPWMTime >= 1) {
-    lastPWMTime = currentMillis;
-    analogWriteESP(ledPin, currentBrightness);
+  // 發布MQTT數據 (每5秒發布一次)
+  if (currentMillis - lastMqttPublishTime >= mqttPublishInterval) {
+    lastMqttPublishTime = currentMillis;
+    
+    // 發布各種數據
+    publishEnvironmentData();
+    publishReminderStatus();
   }
   
   // 如果警報啟動，持續執行閃爍
@@ -412,6 +543,6 @@ void loop() {
     blinkRedLed();
   }
   
-  // 短暫延遲，避免CPU過度佔用
+  // 極短暫延遲，避免CPU過度佔用但不影響軟PWM精度
   delayMicroseconds(100);
 }

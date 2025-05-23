@@ -1,0 +1,362 @@
+[
+    {
+        "id": "a99ef80a0efd40bf",
+        "type": "tab",
+        "label": "流程2",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "a5e3f259d2f89190",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "172.20.10.5",
+        "port": 1883,
+        "clientid": "NodeRED-Client",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "smartlamp/light",
+        "birthQos": "0",
+        "birthRetain": "true",
+        "birthPayload": "{\"brightness\":255}",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "01310e455f6afa94",
+        "type": "ui_tab",
+        "name": "Home1",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "02ec12f6d66023d4",
+        "type": "ui_base",
+        "theme": {
+            "name": "theme-light",
+            "lightTheme": {
+                "default": "#0094CE",
+                "baseColor": "#0094CE",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": true,
+                "reset": false
+            },
+            "darkTheme": {
+                "default": "#097479",
+                "baseColor": "#097479",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif",
+                "edited": false
+            },
+            "customTheme": {
+                "name": "Untitled Theme 1",
+                "default": "#4B7930",
+                "baseColor": "#4B7930",
+                "baseFont": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+            },
+            "themeState": {
+                "base-color": {
+                    "default": "#0094CE",
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-titlebar-backgroundColor": {
+                    "value": "#0094CE",
+                    "edited": false
+                },
+                "page-backgroundColor": {
+                    "value": "#fafafa",
+                    "edited": false
+                },
+                "page-sidebar-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-textColor": {
+                    "value": "#1bbfff",
+                    "edited": false
+                },
+                "group-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "group-backgroundColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "widget-textColor": {
+                    "value": "#111111",
+                    "edited": false
+                },
+                "widget-backgroundColor": {
+                    "value": "#0094ce",
+                    "edited": false
+                },
+                "widget-borderColor": {
+                    "value": "#ffffff",
+                    "edited": false
+                },
+                "base-font": {
+                    "value": "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen-Sans,Ubuntu,Cantarell,Helvetica Neue,sans-serif"
+                }
+            },
+            "angularTheme": {
+                "primary": "indigo",
+                "accents": "blue",
+                "warn": "red",
+                "background": "grey",
+                "palette": "light"
+            }
+        },
+        "site": {
+            "name": "Node-RED Dashboard",
+            "hideToolbar": "false",
+            "allowSwipe": "false",
+            "lockMenu": "false",
+            "allowTempTheme": "true",
+            "dateFormat": "DD/MM/YYYY",
+            "sizes": {
+                "sx": 48,
+                "sy": 48,
+                "gx": 6,
+                "gy": 6,
+                "cx": 6,
+                "cy": 6,
+                "px": 0,
+                "py": 0
+            }
+        }
+    },
+    {
+        "id": "3c377ebc2e51bc7c",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "01310e455f6afa94",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "ef90689b4f18d9b3",
+        "type": "mqtt in",
+        "z": "a99ef80a0efd40bf",
+        "name": "環境數據",
+        "topic": "smartlamp/environment",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "a5e3f259d2f89190",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 360,
+        "y": 220,
+        "wires": [
+            [
+                "fa58d6e5ed3e05de",
+                "87271953ac998ebe"
+            ]
+        ]
+    },
+    {
+        "id": "626fdef19060324f",
+        "type": "mqtt in",
+        "z": "a99ef80a0efd40bf",
+        "name": "久坐提醒",
+        "topic": "smartlamp/reminder",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "a5e3f259d2f89190",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 340,
+        "y": 340,
+        "wires": [
+            [
+                "ade2b1c48aba2452",
+                "bad58b6f8a9b2a3b"
+            ]
+        ]
+    },
+    {
+        "id": "fa58d6e5ed3e05de",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 540,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "ade2b1c48aba2452",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 540,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "520bdc83015c57e1",
+        "type": "ui_gauge",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "group": "3c377ebc2e51bc7c",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "溫度",
+        "label": "°C",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "40",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 770,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "87271953ac998ebe",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "處理環境數據",
+        "func": "// 解析JSON數據（如果尚未解析）\nlet data = msg.payload;\nif (typeof data === 'string') {\n    try {\n        data = JSON.parse(data);\n    } catch (e) {\n        node.error(\"無法解析JSON: \" + e.message);\n        return null;\n    }\n}\n\n// 確保數據格式正確\nif (!data || typeof data !== 'object') {\n    node.error(\"無效的數據格式\");\n    return null;\n}\n\n// 準備三個獨立的消息對象\nlet tempMsg = { topic: \"temperature\" };\nlet humidMsg = { topic: \"humidity\" };\nlet lightMsg = { topic: \"light\" };\n\n// 提取並格式化數據\nif (data.hasOwnProperty('temperature')) {\n    tempMsg.payload = parseFloat(data.temperature).toFixed(1);\n} else {\n    tempMsg = null;\n}\n\nif (data.hasOwnProperty('humidity')) {\n    humidMsg.payload = parseFloat(data.humidity).toFixed(1);\n} else {\n    humidMsg = null;\n}\n\nif (data.hasOwnProperty('light')) {\n    lightMsg.payload = parseInt(data.light);\n} else {\n    lightMsg = null;\n}\n\n// 添加時間戳記，用於圖表顯示\nconst now = new Date();\nif (tempMsg) tempMsg.timestamp = now;\nif (humidMsg) humidMsg.timestamp = now;\nif (lightMsg) lightMsg.timestamp = now;\n\n// 返回三個消息對象，對應三個輸出\nreturn [tempMsg, humidMsg, lightMsg];",
+        "outputs": 3,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 540,
+        "y": 240,
+        "wires": [
+            [
+                "520bdc83015c57e1"
+            ],
+            [
+                "667fc466919ddd0c"
+            ],
+            [
+                "78473980125dfb8b"
+            ]
+        ]
+    },
+    {
+        "id": "bad58b6f8a9b2a3b",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "處理久坐提醒",
+        "func": "// 解析JSON數據（如果尚未解析）\nlet data = msg.payload;\nif (typeof data === 'string') {\n    try {\n        data = JSON.parse(data);\n    } catch (e) {\n        node.error(\"無法解析JSON: \" + e.message);\n        return null;\n    }\n}\n\n// 確保數據格式正確\nif (!data || typeof data !== 'object') {\n    node.error(\"無效的數據格式\");\n    return null;\n}\n\n// 準備兩個獨立的消息對象\nlet statusMsg = { topic: \"sitting_status\" };\nlet durationMsg = { topic: \"sitting_duration\" };\n\n// 提取坐姿狀態\nif (data.hasOwnProperty('sitting')) {\n    statusMsg.payload = data.sitting === true || data.sitting === \"true\" ? \"坐著\" : \"未坐\";\n} else {\n    statusMsg = null;\n}\n\n// 提取坐姿時間\nif (data.hasOwnProperty('duration')) {\n    const duration = parseInt(data.duration);\n    durationMsg.payload = duration;\n\n    // 添加警告訊息\n    if (duration >= 600) { // 10分鐘\n        durationMsg.warning = true;\n        durationMsg.message = \"久坐警告！請起身活動\";\n    } else {\n        durationMsg.warning = false;\n    }\n} else {\n    durationMsg = null;\n}\n\n// 返回兩個消息對象\nreturn [statusMsg, durationMsg];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 400,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "667fc466919ddd0c",
+        "type": "ui_gauge",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "group": "3c377ebc2e51bc7c",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "濕度",
+        "label": "%",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 770,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "78473980125dfb8b",
+        "type": "ui_gauge",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "group": "3c377ebc2e51bc7c",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "光線強度",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "1000",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 780,
+        "y": 320,
+        "wires": []
+    }
+]
