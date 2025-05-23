@@ -4,6 +4,7 @@
 #include <LedControlMS.h>
 #include <WiFi.h>          // 加入WiFi庫
 #include <PubSubClient.h>  // 加入MQTT庫
+#include "pitches.h"       // 加入pitches.h
 
 // LED矩陣設定
 #define DATA_PIN 19  // DIN腳位
@@ -11,6 +12,14 @@
 #define CS_PIN 18    // CS腳位
 #define NBR_MTX 1    // 1個8x8矩陣
 LedControl lc = LedControl(DATA_PIN, CLK_PIN, CS_PIN, NBR_MTX);
+
+// 蜂鳴器設定
+#define BUZZER_PIN 4  // 蜂鳴器腳位
+// 蜂鳴器音樂陣列
+int melody[] = {
+  NOTE_C6, NOTE_D6, NOTE_E6, NOTE_F6, NOTE_G6, NOTE_A6, NOTE_B6
+};
+int noteDuration = 300;  // 每個音符持續時間
 
 // WiFi設定
 const char* ssid = "李翊辰的iPhone";         // 請修改為您的WiFi名稱
@@ -26,6 +35,7 @@ const char* mqtt_password = "";            // MQTT密碼，如果有需要
 // MQTT主題
 const char* topic_environment = "smartlamp/environment"; // 環境數據（溫濕度、光敏）
 const char* topic_reminder = "smartlamp/reminder";      // 久坐提醒狀態
+const char* topic_settings = "smartlamp/settings/sitting_reminder"; // 久坐提醒時間設定
 
 // 建立WiFi和MQTT客戶端
 WiFiClient espClient;
@@ -106,7 +116,7 @@ int MAX_LIGHT = 500;   // 暗環境的值（較高讀數）
 
 // 久坐提醒相關變數
 const int DISTANCE_THRESHOLD = 50;       // 距離閾值（小於50cm被視為坐下）
-const unsigned long SITTING_TIME_THRESHOLD = 600000;  // 久坐時間閾值（10分鐘）
+unsigned long SITTING_TIME_THRESHOLD = 600000;  // 久坐時間閾值（預設10分鐘）
 unsigned long sittingStartTime = 0;      // 開始坐下的時間
 bool isSitting = false;                  // 目前是否坐著
 bool alarmActive = false;                // 警報是否啟動
@@ -150,6 +160,55 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+// MQTT回調函數，處理接收到的消息
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("收到消息 [");
+  Serial.print(topic);
+  Serial.print("] ");
+  
+  // 將payload轉換為字串
+  String message;
+  for (int i = 0; i < length; i++) {
+    message += (char)payload[i];
+  }
+  Serial.println(message);
+  
+  // 處理久坐提醒時間設定
+  if (String(topic) == topic_settings) {
+    // 嘗試解析JSON格式的設定
+    // 格式預期為 {"reminder_time": 秒數}
+    int startPos = message.indexOf("reminder_time");
+    if (startPos > 0) {
+      int valuePos = message.indexOf(":", startPos);
+      int endPos = message.indexOf("}", valuePos);
+      if (valuePos > 0 && endPos > 0) {
+        // 提取數值
+        String valueStr = message.substring(valuePos + 1, endPos);
+        valueStr.trim();
+        
+        // 直接使用秒數
+        unsigned long newThreshold = valueStr.toInt(); // 不乘以1000
+        
+        // 更新久坐時間閾值（檢查秒數範圍）
+        if (newThreshold >= 30 && newThreshold <= 3600) { // 30秒到60分鐘的範圍
+          SITTING_TIME_THRESHOLD = newThreshold * 1000; // 存儲時轉換為毫秒
+          Serial.print("已更新久坐提醒時間閾值為 ");
+          Serial.print(newThreshold);
+          Serial.println(" 秒");
+          
+          // 重置久坐狀態
+          if (isSitting) {
+            sittingStartTime = millis(); // 重置計時
+            alarmActive = false;         // 關閉警報
+          }
+        } else {
+          Serial.println("久坐提醒時間超出有效範圍！有效範圍為30-3600秒");
+        }
+      }
+    }
+  }
+}
+
 // 重新連接MQTT伺服器
 void reconnect() {
   // 設定重連嘗試次數
@@ -165,6 +224,11 @@ void reconnect() {
       
       // 發送連接成功消息
       client.publish(topic_environment, "ESP32已連接");
+      
+      // 訂閱設定主題
+      client.subscribe(topic_settings);
+      Serial.println("已訂閱久坐提醒時間設定主題");
+      
       return;  // 連接成功直接返回
     } else {
       Serial.print("連接失敗, rc=");
@@ -210,6 +274,7 @@ void setup() {
   
   // 設置MQTT伺服器和回調函數
   client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(callback);  // 設置回調函數處理接收到的消息
   
   // 初始化DHT溫濕度感測器
   dht1.begin();
@@ -228,6 +293,9 @@ void setup() {
   // 久坐提醒設定
   pinMode(redLedPin, OUTPUT);
   digitalWrite(redLedPin, LOW);  // 初始化時確保紅燈關閉
+  
+  // 初始化蜂鳴器
+  pinMode(BUZZER_PIN, OUTPUT);
   
   Serial.println("系統初始化完成...");
   delay(1000);
@@ -303,6 +371,8 @@ void handleSittingReminder() {
         // 輸出已坐時間
         Serial.print("已坐時間(秒): ");
         Serial.println(sittingDuration / 1000);
+        Serial.print("閾值(秒): ");
+        Serial.println(SITTING_TIME_THRESHOLD / 1000);
         
         if (sittingDuration >= SITTING_TIME_THRESHOLD && !alarmActive) {
           // 達到久坐時間閾值，啟動警報
@@ -359,6 +429,20 @@ void handleDHTSensor() {
   Serial.println(" °C");
   
   Serial.println("--------------------");
+  
+  // 溫度高於25度時發出蜂鳴器警報
+  static bool hasBeeped = false;
+  if (temperature > 24.0 && !hasBeeped) {
+    // 發出兩聲警報
+    tone(BUZZER_PIN, NOTE_C6, 300);
+    delay(500);
+    tone(BUZZER_PIN, NOTE_C6, 300);
+    hasBeeped = true;
+    Serial.println("溫度過高警報！");
+  } else if (temperature <=24.0) {
+    // 溫度回到閾值以下，重置警報狀態
+    hasBeeped = false;
+  }
   
   // 更新跑馬燈顯示文字
   updateScrollText();
@@ -479,10 +563,13 @@ void publishReminderStatus() {
   
   if (isSitting) {
     unsigned long sittingDuration = millis() - sittingStartTime;
-    status += "\"duration\":" + String(sittingDuration / 1000);
+    status += "\"duration\":" + String(sittingDuration / 1000) + ",";
   } else {
-    status += "\"duration\":0";
+    status += "\"duration\":0,";
   }
+  
+  // 新增：發布當前的久坐時間閾值
+  status += "\"threshold\":" + String(SITTING_TIME_THRESHOLD / 1000);
   
   status += "}";
   

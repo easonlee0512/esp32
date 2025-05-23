@@ -39,14 +39,6 @@
         "sessionExpiry": ""
     },
     {
-        "id": "01310e455f6afa94",
-        "type": "ui_tab",
-        "name": "Home1",
-        "icon": "dashboard",
-        "disabled": false,
-        "hidden": false
-    },
-    {
         "id": "02ec12f6d66023d4",
         "type": "ui_base",
         "theme": {
@@ -144,15 +136,45 @@
         }
     },
     {
-        "id": "3c377ebc2e51bc7c",
+        "id": "d6f76d64aa7b5c7c",
+        "type": "ui_tab",
+        "name": "智慧檯燈",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "be04ad157ba60ed9",
         "type": "ui_group",
-        "name": "Default",
-        "tab": "01310e455f6afa94",
+        "name": "環境數據",
+        "tab": "d6f76d64aa7b5c7c",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "c48ba298d806d659",
+        "type": "ui_group",
+        "name": "久坐提醒",
+        "tab": "d6f76d64aa7b5c7c",
         "order": 2,
         "disp": true,
         "width": 6,
         "collapse": false,
         "className": ""
+    },
+    {
+        "id": "56d1777e6eaf235f",
+        "type": "MySQLdatabase",
+        "name": "",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "db": "smartlamp",
+        "tz": "",
+        "charset": "UTF8"
     },
     {
         "id": "ef90689b4f18d9b3",
@@ -203,7 +225,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 1",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -219,7 +241,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 2",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -235,8 +257,8 @@
         "type": "ui_gauge",
         "z": "a99ef80a0efd40bf",
         "name": "",
-        "group": "3c377ebc2e51bc7c",
-        "order": 0,
+        "group": "be04ad157ba60ed9",
+        "order": 2,
         "width": 0,
         "height": 0,
         "gtype": "gage",
@@ -312,8 +334,8 @@
         "type": "ui_gauge",
         "z": "a99ef80a0efd40bf",
         "name": "",
-        "group": "3c377ebc2e51bc7c",
-        "order": 1,
+        "group": "be04ad157ba60ed9",
+        "order": 3,
         "width": 0,
         "height": 0,
         "gtype": "gage",
@@ -340,8 +362,8 @@
         "type": "ui_gauge",
         "z": "a99ef80a0efd40bf",
         "name": "",
-        "group": "3c377ebc2e51bc7c",
-        "order": 2,
+        "group": "be04ad157ba60ed9",
+        "order": 1,
         "width": 0,
         "height": 0,
         "gtype": "gage",
@@ -367,7 +389,7 @@
         "id": "acb2774fc44678e9",
         "type": "ui_text",
         "z": "a99ef80a0efd40bf",
-        "group": "3c377ebc2e51bc7c",
+        "group": "c48ba298d806d659",
         "order": 3,
         "width": 0,
         "height": 0,
@@ -389,8 +411,8 @@
         "type": "ui_gauge",
         "z": "a99ef80a0efd40bf",
         "name": "",
-        "group": "3c377ebc2e51bc7c",
-        "order": 4,
+        "group": "c48ba298d806d659",
+        "order": 2,
         "width": 0,
         "height": 0,
         "gtype": "gage",
@@ -410,6 +432,435 @@
         "className": "",
         "x": 720,
         "y": 420,
+        "wires": []
+    },
+    {
+        "id": "bf6755a4c8b303de",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "轉換為秒數",
+        "func": "// 將分鐘轉換為秒並格式化為JSON\nmsg.payload = {\n    reminder_time: msg.payload * 60\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 590,
+        "y": 540,
+        "wires": [
+            [
+                "83df973652a30b9e"
+            ]
+        ]
+    },
+    {
+        "id": "e520fc14cd983469",
+        "type": "ui_slider",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "label": "久坐提醒時間設定",
+        "tooltip": "",
+        "group": "c48ba298d806d659",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "all",
+        "topic": "topic",
+        "topicType": "msg",
+        "min": "1",
+        "max": "60",
+        "step": 1,
+        "className": "",
+        "x": 370,
+        "y": 520,
+        "wires": [
+            [
+                "bf6755a4c8b303de"
+            ]
+        ]
+    },
+    {
+        "id": "83df973652a30b9e",
+        "type": "mqtt out",
+        "z": "a99ef80a0efd40bf",
+        "name": "設定久坐時間",
+        "topic": "smartlamp/settings/sitting_reminder",
+        "qos": "0",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "a5e3f259d2f89190",
+        "x": 760,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "7e38160211909cdc",
+        "type": "mqtt in",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "topic": "smartlamp/reminder",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "a5e3f259d2f89190",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 430,
+        "y": 620,
+        "wires": [
+            [
+                "6165e3bedc57c224",
+                "55d5da4ef2daee14"
+            ]
+        ]
+    },
+    {
+        "id": "6165e3bedc57c224",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "function 1",
+        "func": "if (msg.payload) {\n    try {\n        // 如果訊息是字串，先解析為JSON\n        let data = msg.payload;\n        if (typeof data === 'string') {\n            data = JSON.parse(data);\n        }\n\n        if (data.threshold) {\n            msg.payload = \"目前久坐提醒時間：\" + data.threshold + \" 秒\";\n            return msg;\n        }\n    } catch (e) {\n        node.error(\"解析JSON錯誤: \" + e.message);\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 600,
+        "wires": [
+            [
+                "e476edcbc3c6a8a4"
+            ]
+        ]
+    },
+    {
+        "id": "e476edcbc3c6a8a4",
+        "type": "ui_text",
+        "z": "a99ef80a0efd40bf",
+        "group": "c48ba298d806d659",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "目前久坐提醒時間",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 830,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "55d5da4ef2daee14",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 3",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "85143f61fdbdd539",
+        "type": "mysql",
+        "z": "a99ef80a0efd40bf",
+        "mydb": "56d1777e6eaf235f",
+        "name": "SittingDB",
+        "x": 940,
+        "y": 740,
+        "wires": [
+            [
+                "f68923ce0bfcf67f"
+            ]
+        ]
+    },
+    {
+        "id": "c32c650d81538f9c",
+        "type": "mqtt in",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "topic": "smartlamp/reminder",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "a5e3f259d2f89190",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 350,
+        "y": 740,
+        "wires": [
+            [
+                "bfd0c0e643795e12"
+            ]
+        ]
+    },
+    {
+        "id": "bfd0c0e643795e12",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "檢測讀書時間",
+        "func": "// 首先正確解析JSON字串\nlet data;\nif (typeof msg.payload === 'string') {\n    try {\n        data = JSON.parse(msg.payload);\n    } catch (e) {\n        node.error(\"JSON解析錯誤: \" + e.message);\n        return null;\n    }\n} else {\n    data = msg.payload;\n}\n\n// 使用持久化儲存\nconst currentSitting = data.sitting === true || data.sitting === \"true\";\nconst lastSitting = context.get('lastSitting', 'file') || false;\nconst duration = parseInt(data.duration || 0);\n\n// 調試輸出\nnode.warn(\"解析後數據: \" + JSON.stringify(data));\nnode.warn(\"狀態: 目前=\" + (currentSitting ? \"坐著\" : \"未坐著\") +\n    \", 上次=\" + (lastSitting ? \"坐著\" : \"未坐著\"));\n\n// 如果剛坐下（狀態從false變為true）\nif (currentSitting && !lastSitting) {\n    // 記錄開始坐下的時間\n    const startTime = new Date();\n    context.set('sittingStartTime', startTime.toISOString(), 'file');\n    context.set('lastSitting', true, 'file');\n\n    node.warn(\"使用者開始坐下: \" + startTime.toISOString());\n    return null;\n}\n\n// 如果剛站起（狀態從true變為false）\nif (!currentSitting && lastSitting) {\n    // 獲取開始時間\n    const startTimeStr = context.get('sittingStartTime', 'file');\n    if (!startTimeStr) {\n        node.warn(\"錯誤: 找不到開始坐下時間\");\n        context.set('lastSitting', false, 'file');\n        return null;\n    }\n\n    // 計算時間差\n    const endTime = new Date();\n    const startTime = new Date(startTimeStr);\n    const durationSec = Math.floor((endTime - startTime) / 1000);\n\n    // 格式化為MySQL日期格式\n    const formatDate = (date) => {\n        return date.toISOString().slice(0, 19).replace('T', ' ');\n    };\n\n    // 創建SQL指令\n    msg.topic = \"INSERT INTO sitting_records (start_time, end_time, duration_seconds) VALUES (?, ?, ?)\";\n    msg.payload = [\n        formatDate(startTime),\n        formatDate(endTime),\n        durationSec\n    ];\n\n    // 重置狀態\n    context.set('lastSitting', false, 'file');\n\n    node.warn(\"使用者站起: 持續了 \" + durationSec + \" 秒\");\n    node.warn(\"SQL: \" + msg.topic);\n    node.warn(\"參數: \" + JSON.stringify(msg.payload));\n\n    return msg;\n}\n\n// 狀態未變化，僅更新當前狀態\ncontext.set('lastSitting', currentSitting, 'file');\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 3,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 780,
+        "wires": [
+            [
+                "b91488ba884447fe",
+                "85143f61fdbdd539"
+            ]
+        ]
+    },
+    {
+        "id": "b91488ba884447fe",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "f68923ce0bfcf67f",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1100,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "258248259d61ac4d",
+        "type": "inject",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1800",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "iso",
+        "payloadType": "date",
+        "x": 280,
+        "y": 900,
+        "wires": [
+            [
+                "4e478e7f258e48fa"
+            ]
+        ]
+    },
+    {
+        "id": "55f6d1d209809ea0",
+        "type": "mysql",
+        "z": "a99ef80a0efd40bf",
+        "mydb": "56d1777e6eaf235f",
+        "name": "SittingDB",
+        "x": 460,
+        "y": 900,
+        "wires": [
+            [
+                "c3c537b3237c54e0",
+                "01d6728f4bc8b878"
+            ]
+        ]
+    },
+    {
+        "id": "c3c537b3237c54e0",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "function 2",
+        "func": "// 檢查是否有數據\nif (!msg.payload || !Array.isArray(msg.payload) || msg.payload.length === 0) {\n    node.warn(\"沒有久坐記錄\");\n    // 返回空數據，避免圖表錯誤\n    msg.payload = [];\n    return msg;\n}\n\n// 調試輸出\nnode.warn(\"原始數據: \" + JSON.stringify(msg.payload));\n\n// 準備圖表數據\nlet chartData = [];\n\n// 將記錄排序為時間順序（從舊到新）\nconst records = msg.payload.sort((a, b) =>\n    new Date(a.start_time) - new Date(b.start_time));\n\n// 格式化時間顯示 (HH:MM)\nconst formatTime = (dateStr) => {\n    const d = new Date(dateStr);\n    return d.getHours() + \":\" +\n        (d.getMinutes() < 10 ? \"0\" + d.getMinutes() : d.getMinutes());\n};\n\n// 格式化日期 (MM/DD)\nconst formatDate = (dateStr) => {\n    const d = new Date(dateStr);\n    return (d.getMonth() + 1) + \"/\" + d.getDate();\n};\n\n// 建立數據結構\nlet series = [\"久坐時間\"];\nlet data = [[]];\nlet labels = [];\n\n// 將每條記錄轉為圖表數據\nrecords.forEach(record => {\n    // 計算持續時間（分鐘）並四捨五入到一位小數\n    const durationMins = Math.round((record.duration_seconds / 60) * 10) / 10;\n\n    // 建立標籤：日期 + 開始時間\n    const label = formatDate(record.start_time) + \" \" + formatTime(record.start_time);\n\n    // 添加到數據陣列\n    labels.push(label);\n    data[0].push(durationMins);\n});\n\n// 構建圖表最終格式\nmsg.payload = [{\n    series: series,\n    data: data,\n    labels: labels\n}];\n\nnode.warn(\"輸出到圖表的數據: \" + JSON.stringify(msg.payload));\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 4,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 940,
+        "wires": [
+            [
+                "a5e6490617193ae4",
+                "c5a9a862854446a4"
+            ]
+        ]
+    },
+    {
+        "id": "a5e6490617193ae4",
+        "type": "ui_chart",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "group": "c48ba298d806d659",
+        "order": 1,
+        "width": "6",
+        "height": "6",
+        "label": "久坐時段分布",
+        "chartType": "bar",
+        "legend": "true",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": true,
+        "ymin": "0",
+        "ymax": "30",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 880,
+        "y": 940,
+        "wires": [
+            [
+                "86ff789143437ca5"
+            ]
+        ]
+    },
+    {
+        "id": "4e478e7f258e48fa",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "function 3",
+        "func": "// 設置SQL查詢到msg.topic\nmsg.topic = `SELECT \n  id,\n  start_time,\n  end_time,\n  duration_seconds\nFROM \n  sitting_records\nORDER BY \n  start_time DESC\nLIMIT 20`;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 840,
+        "wires": [
+            [
+                "55f6d1d209809ea0",
+                "2575960f33448def"
+            ]
+        ]
+    },
+    {
+        "id": "01d6728f4bc8b878",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 560,
+        "y": 1000,
+        "wires": []
+    },
+    {
+        "id": "c5a9a862854446a4",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 840,
+        "y": 1020,
+        "wires": []
+    },
+    {
+        "id": "86ff789143437ca5",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 8",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1080,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "2575960f33448def",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 9",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 840,
         "wires": []
     }
 ]
