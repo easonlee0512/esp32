@@ -63,12 +63,18 @@ brew services start mosquitto
 ### 2. 啟動Node-RED
 
 ```bash
-# 在專案目錄中執行
-cd /Users/eason/esp32/smart-desk-lamp
+# 在專案根目錄中執行以下命令啟動Node-RED
+cd /Users/eason/esp32
 npm start
 ```
 
 然後在瀏覽器中訪問：http://localhost:1880
+
+**注意事項：**
+- 專案使用的Node-RED流程文件位於 `/Users/eason/esp32/node-red-data/flows.json`
+- 請務必使用上述專案根目錄中的 `npm start` 命令啟動Node-RED，而不是直接使用 `node-red` 命令
+- 如果直接使用 `node-red` 命令，流程將保存在默認位置 `/Users/eason/.node-red/flows.json`，與專案使用的流程文件不同
+- 不要在 `/Users/eason/esp32/smart-desk-lamp` 子目錄啟動，這是一個不同的配置
 
 ### 3. 上傳代碼到ESP32
 
@@ -81,7 +87,7 @@ npm start
 
 ```bash
 # 訂閱所有智慧桌燈主題
-mosquitto_sub -h <您的IP地址> -t "smartlamp/#" -v
+mosquitto_sub -h localhost -t "smartlamp/#" -v
 ```
 
 ## MQTT主題結構
@@ -91,6 +97,7 @@ mosquitto_sub -h <您的IP地址> -t "smartlamp/#" -v
 - `smartlamp/timer` - 計時器狀態
 - `smartlamp/alarm` - 鬧鐘設定
 - `smartlamp/reminder` - 久坐提醒狀態
+- `smartlamp/settings/sitting_reminder` - 久坐提醒時間設定
 
 ## MQTT消息示例
 
@@ -99,16 +106,17 @@ mosquitto_sub -h <您的IP地址> -t "smartlamp/#" -v
 ```
 smartlamp/light {"brightness":255}
 smartlamp/environment {"temperature":29.00,"humidity":90.00,"light":128}
-smartlamp/reminder {"sitting":true,"alarm":false,"duration":134}
+smartlamp/reminder {"sitting":true,"alarm":false,"duration":134,"threshold":600}
 smartlamp/test 測試訊息
 smartlamp/environment {"temperature":27.00,"humidity":87.00,"light":159}
-smartlamp/reminder {"sitting":true,"alarm":false,"duration":139}
+smartlamp/reminder {"sitting":true,"alarm":false,"duration":139,"threshold":600}
 smartlamp/environment {"temperature":27.00,"humidity":84.00,"light":139}
-smartlamp/reminder {"sitting":true,"alarm":false,"duration":144}
+smartlamp/reminder {"sitting":true,"alarm":false,"duration":144,"threshold":600}
 smartlamp/environment {"temperature":27.00,"humidity":84.00,"light":141}
-smartlamp/reminder {"sitting":true,"alarm":false,"duration":149}
+smartlamp/reminder {"sitting":true,"alarm":false,"duration":149,"threshold":600}
 smartlamp/environment {"temperature":27.00,"humidity":87.00,"light":163}
-smartlamp/reminder {"sitting":true,"alarm":false,"duration":154}
+smartlamp/reminder {"sitting":true,"alarm":false,"duration":154,"threshold":600}
+smartlamp/settings/sitting_reminder {"reminder_time":300}
 ```
 
 這些消息可以通過以下命令監聽：
@@ -126,3 +134,10 @@ mosquitto_sub -h localhost -t "smartlamp/#" -v
 2. 如果Node-RED無法啟動，請檢查：
    - node-red-data目錄是否存在
    - 1880埠是否被其他程式佔用
+
+3. 如果無法看到之前創建的流程：
+   - 確認是使用專案根目錄 `/Users/eason/esp32` 中的 `npm start` 命令啟動Node-RED
+   - 如果之前使用了默認的Node-RED，可以複製流程文件：
+     ```bash
+     cp /Users/eason/.node-red/flows.json /Users/eason/esp32/node-red-data/
+     ```

@@ -156,6 +156,17 @@
         "className": ""
     },
     {
+        "id": "light_control_group",
+        "type": "ui_group",
+        "name": "燈光控制",
+        "tab": "d6f76d64aa7b5c7c",
+        "order": 4,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
         "id": "c48ba298d806d659",
         "type": "ui_group",
         "name": "久坐提醒",
@@ -175,6 +186,17 @@
         "db": "smartlamp",
         "tz": "",
         "charset": "UTF8"
+    },
+    {
+        "id": "ba8a8c54f9a14376",
+        "type": "ui_group",
+        "name": "鬧鐘設定",
+        "tab": "d6f76d64aa7b5c7c",
+        "order": 3,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
     },
     {
         "id": "ef90689b4f18d9b3",
@@ -639,7 +661,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 4",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -656,7 +678,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 5",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -804,7 +826,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 6",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -820,7 +842,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 7",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -836,7 +858,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 8",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -852,7 +874,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 9",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -861,6 +883,746 @@
         "statusType": "auto",
         "x": 580,
         "y": 840,
+        "wires": []
+    },
+    {
+        "id": "017fc836e85fd3fb",
+        "type": "ui_dropdown",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "label": "小時",
+        "tooltip": "",
+        "place": "選擇小時",
+        "group": "ba8a8c54f9a14376",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "multiple": false,
+        "options": [
+            {
+                "label": "00",
+                "value": "0",
+                "type": "str"
+            },
+            {
+                "label": "01",
+                "value": "1",
+                "type": "str"
+            },
+            {
+                "label": "02",
+                "value": "2",
+                "type": "str"
+            },
+            {
+                "label": "03",
+                "value": "3",
+                "type": "str"
+            },
+            {
+                "label": "04",
+                "value": "4",
+                "type": "str"
+            },
+            {
+                "label": "05",
+                "value": "5",
+                "type": "str"
+            },
+            {
+                "label": "06",
+                "value": "6",
+                "type": "str"
+            },
+            {
+                "label": "07",
+                "value": "7",
+                "type": "str"
+            },
+            {
+                "label": "08",
+                "value": "8",
+                "type": "str"
+            },
+            {
+                "label": "09",
+                "value": "9",
+                "type": "str"
+            },
+            {
+                "label": "10",
+                "value": "10",
+                "type": "str"
+            },
+            {
+                "label": "11",
+                "value": "11",
+                "type": "str"
+            },
+            {
+                "label": "12",
+                "value": "12",
+                "type": "str"
+            },
+            {
+                "label": "13",
+                "value": "13",
+                "type": "str"
+            },
+            {
+                "label": "14",
+                "value": "14",
+                "type": "str"
+            },
+            {
+                "label": "15",
+                "value": "15",
+                "type": "str"
+            },
+            {
+                "label": "16",
+                "value": "16",
+                "type": "str"
+            },
+            {
+                "label": "17",
+                "value": "17",
+                "type": "str"
+            },
+            {
+                "label": "18",
+                "value": "18",
+                "type": "str"
+            },
+            {
+                "label": "19",
+                "value": "19",
+                "type": "str"
+            },
+            {
+                "label": "20",
+                "value": "20",
+                "type": "str"
+            },
+            {
+                "label": "21",
+                "value": "21",
+                "type": "str"
+            },
+            {
+                "label": "22",
+                "value": "22",
+                "type": "str"
+            },
+            {
+                "label": "23",
+                "value": "23",
+                "type": "str"
+            }
+        ],
+        "payload": "",
+        "topic": "alarm_hour",
+        "topicType": "str",
+        "className": "",
+        "x": 250,
+        "y": 1120,
+        "wires": [
+            [
+                "9ed75c76ce1ab1cb"
+            ]
+        ]
+    },
+    {
+        "id": "d2cae14b926975a6",
+        "type": "ui_dropdown",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "label": "分鐘",
+        "tooltip": "",
+        "place": "選擇分鐘",
+        "group": "ba8a8c54f9a14376",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "multiple": false,
+        "options": [
+            {
+                "label": "00",
+                "value": "0",
+                "type": "str"
+            },
+            {
+                "label": "05",
+                "value": "5",
+                "type": "str"
+            },
+            {
+                "label": "10",
+                "value": "10",
+                "type": "str"
+            },
+            {
+                "label": "15",
+                "value": "15",
+                "type": "str"
+            },
+            {
+                "label": "20",
+                "value": "20",
+                "type": "str"
+            },
+            {
+                "label": "25",
+                "value": "25",
+                "type": "str"
+            },
+            {
+                "label": "30",
+                "value": "30",
+                "type": "str"
+            },
+            {
+                "label": "35",
+                "value": "35",
+                "type": "str"
+            },
+            {
+                "label": "40",
+                "value": "40",
+                "type": "str"
+            },
+            {
+                "label": "45",
+                "value": "45",
+                "type": "str"
+            },
+            {
+                "label": "50",
+                "value": "50",
+                "type": "str"
+            },
+            {
+                "label": "55",
+                "value": "55",
+                "type": "str"
+            }
+        ],
+        "payload": "",
+        "topic": "alarm_minute",
+        "topicType": "str",
+        "className": "",
+        "x": 250,
+        "y": 1180,
+        "wires": [
+            [
+                "9ed75c76ce1ab1cb"
+            ]
+        ]
+    },
+    {
+        "id": "9ed75c76ce1ab1cb",
+        "type": "join",
+        "z": "a99ef80a0efd40bf",
+        "name": "合併時間和開關",
+        "mode": "custom",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": false,
+        "accumulate": false,
+        "timeout": "1",
+        "count": "",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 510,
+        "y": 1180,
+        "wires": [
+            [
+                "e1b2c35577f7dc93"
+            ]
+        ]
+    },
+    {
+        "id": "e1b2c35577f7dc93",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "function 4",
+        "func": "// 獲取或保持最後的設定值\nvar context = flow.get('alarmSettings') || {\n    hour: 0,\n    minute: 0,\n    enabled: false\n};\n\n// 更新收到的新設定\nif (msg.topic === 'alarm_hour' && msg.payload !== undefined) {\n    context.hour = parseInt(msg.payload) || 0;\n    context.enabled = true;  // 當修改時間時自動啟用\n}\nif (msg.topic === 'alarm_minute' && msg.payload !== undefined) {\n    context.minute = parseInt(msg.payload) || 0;\n    context.enabled = true;  // 當修改時間時自動啟用\n}\nif (msg.topic === 'alarm_switch') {\n    // 反轉開關的值，因為UI開關的值是反的\n    context.enabled = !(msg.payload === true);\n}\n\n// 儲存更新後的設定\nflow.set('alarmSettings', context);\n\n// 確保數值在有效範圍內\ncontext.hour = Math.max(0, Math.min(23, context.hour));\ncontext.minute = Math.max(0, Math.min(59, context.minute));\n\n// 建立鬧鐘設定JSON\nmsg.payload = {\n    \"enabled\": context.enabled,\n    \"hour\": context.hour,\n    \"minute\": context.minute\n};\n\n// 更新節點狀態顯示\nnode.status({\n    fill: context.enabled ? \"green\" : \"red\",\n    shape: \"dot\",\n    text: \"時間: \" + context.hour + \":\" + (context.minute < 10 ? \"0\" : \"\") + context.minute + \", 啟用: \" + context.enabled\n});\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 700,
+        "y": 1180,
+        "wires": [
+            [
+                "1ab20e6dc0b8d2d3",
+                "d30e5987aea0cb90"
+            ]
+        ]
+    },
+    {
+        "id": "522f5ec0b3bbf0b7",
+        "type": "ui_switch",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "label": "鬧鐘開關",
+        "tooltip": "",
+        "group": "ba8a8c54f9a14376",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "decouple": "false",
+        "topic": "alarm_switch",
+        "topicType": "str",
+        "style": "",
+        "onvalue": "false",
+        "onvalueType": "bool",
+        "offvalue": "true",
+        "offvalueType": "bool",
+        "animate": false,
+        "className": "",
+        "x": 260,
+        "y": 1220,
+        "wires": [
+            [
+                "9ed75c76ce1ab1cb"
+            ]
+        ]
+    },
+    {
+        "id": "1ab20e6dc0b8d2d3",
+        "type": "mqtt out",
+        "z": "a99ef80a0efd40bf",
+        "name": "發布鬧鐘設定",
+        "topic": "smartlamp/settings/alarm",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "a5e3f259d2f89190",
+        "x": 920,
+        "y": 1180,
+        "wires": []
+    },
+    {
+        "id": "d30e5987aea0cb90",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 10",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 700,
+        "y": 1280,
+        "wires": []
+    },
+    {
+        "id": "14ba6d97ccb4067e",
+        "type": "mqtt in",
+        "z": "a99ef80a0efd40bf",
+        "name": "訂閱鬧鐘狀態",
+        "topic": "smartlamp/alarm/status",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "a5e3f259d2f89190",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 290,
+        "y": 1360,
+        "wires": [
+            [
+                "87d66fa0fd05dd6b",
+                "774e326501b36f3a"
+            ]
+        ]
+    },
+    {
+        "id": "87d66fa0fd05dd6b",
+        "type": "json",
+        "z": "a99ef80a0efd40bf",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 470,
+        "y": 1360,
+        "wires": [
+            [
+                "b22fa360ac0b772e"
+            ]
+        ]
+    },
+    {
+        "id": "b22fa360ac0b772e",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "function 5",
+        "func": "var status = msg.payload;\n\nif (status.enabled) {\n    var hourStr = status.hour < 10 ? \"0\" + status.hour : status.hour;\n    var minStr = status.minute < 10 ? \"0\" + status.minute : status.minute;\n\n    msg.payload = \"鬧鐘已啟用，時間: \" + hourStr + \":\" + minStr;\n\n    if (status.triggered) {\n        msg.payload += \" (響鈴中)\";\n    }\n} else {\n    msg.payload = \"鬧鐘已關閉\";\n}\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 1360,
+        "wires": [
+            [
+                "8dec07f9d5b56ed0"
+            ]
+        ]
+    },
+    {
+        "id": "8dec07f9d5b56ed0",
+        "type": "ui_text",
+        "z": "a99ef80a0efd40bf",
+        "group": "ba8a8c54f9a14376",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "name": "鬧鐘狀態顯示",
+        "label": "當前狀態",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 880,
+        "y": 1360,
+        "wires": []
+    },
+    {
+        "id": "774e326501b36f3a",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 11",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 480,
+        "y": 1440,
+        "wires": []
+    },
+    {
+        "id": "07cade5c8d3b2342",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 12",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 520,
+        "y": 1260,
+        "wires": []
+    },
+    {
+        "id": "light_switch",
+        "type": "ui_switch",
+        "z": "a99ef80a0efd40bf",
+        "name": "燈光開關",
+        "label": "檯燈開關",
+        "tooltip": "",
+        "group": "light_control_group",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "decouple": "false",
+        "topic": "light_switch",
+        "topicType": "str",
+        "style": "",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "animate": false,
+        "className": "",
+        "x": 260,
+        "y": 80,
+        "wires": [
+            [
+                "light_function"
+            ]
+        ]
+    },
+    {
+        "id": "light_function",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "處理燈光控制",
+        "func": "msg.payload = {\n    power: msg.payload\n};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 80,
+        "wires": [
+            [
+                "light_mqtt_out",
+                "light_debug"
+            ]
+        ]
+    },
+    {
+        "id": "light_mqtt_out",
+        "type": "mqtt out",
+        "z": "a99ef80a0efd40bf",
+        "name": "發送燈光控制",
+        "topic": "smartlamp/light/control",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "a5e3f259d2f89190",
+        "x": 680,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "light_status_in",
+        "type": "mqtt in",
+        "z": "a99ef80a0efd40bf",
+        "name": "接收燈光狀態",
+        "topic": "smartlamp/light/status",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "a5e3f259d2f89190",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 950,
+        "y": 280,
+        "wires": [
+            [
+                "light_status_function",
+                "light_status_debug"
+            ]
+        ]
+    },
+    {
+        "id": "light_status_function",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "處理燈光狀態",
+        "func": "// 檢查payload是否為物件\nif (typeof msg.payload === 'string') {\n    try {\n        msg.payload = JSON.parse(msg.payload);\n    } catch (e) {\n        node.error('解析燈光狀態錯誤: ' + e.message);\n        return null;\n    }\n}\n\n// 取得狀態\nif (msg.payload && msg.payload.status) {\n    msg.payload = msg.payload.status === 'on' ? '開啟' : '關閉';\n    return msg;\n} else {\n    node.error('無效的燈光狀態格式');\n    return null;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1140,
+        "y": 240,
+        "wires": [
+            [
+                "light_status_text"
+            ]
+        ]
+    },
+    {
+        "id": "light_status_text",
+        "type": "ui_text",
+        "z": "a99ef80a0efd40bf",
+        "group": "light_control_group",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "燈光狀態",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1360,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "light_debug",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "燈光控制除錯",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "light_status_debug",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "燈光狀態除錯",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1140,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "http_endpoint",
+        "type": "http in",
+        "z": "a99ef80a0efd40bf",
+        "name": "接收久坐記錄",
+        "url": "/sitting-record",
+        "method": "post",
+        "upload": true,
+        "swaggerDoc": "",
+        "x": 160,
+        "y": 1500,
+        "wires": [
+            [
+                "parse_json_node",
+                "0df2fe1b85a25767"
+            ]
+        ]
+    },
+    {
+        "id": "parse_json_node",
+        "type": "json",
+        "z": "a99ef80a0efd40bf",
+        "name": "解析JSON",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 320,
+        "y": 1500,
+        "wires": [
+            [
+                "process_sitting_record"
+            ]
+        ]
+    },
+    {
+        "id": "process_sitting_record",
+        "type": "function",
+        "z": "a99ef80a0efd40bf",
+        "name": "處理久坐記錄",
+        "func": "// 驗證必要欄位\nif (!msg.payload || typeof msg.payload !== 'object') {\n    msg.statusCode = 400;\n    msg.payload = { error: '無效的數據格式' };\n    return [null, msg];\n}\n\nconst { sitting, alarm, duration, threshold } = msg.payload;\n\nif (sitting === undefined || duration === undefined) {\n    msg.statusCode = 400;\n    msg.payload = { error: '缺少必要欄位' };\n    return [null, msg];\n}\n\n// 準備資料庫查詢\nconst now = new Date();\nmsg.topic = 'INSERT INTO sitting_records (start_time, end_time, duration_seconds) VALUES (?, ?, ?)';\n\n// 計算開始時間\nconst endTime = now;\nconst startTime = new Date(now.getTime() - (duration * 1000));\n\nmsg.payload = [\n    startTime,\n    endTime,\n    duration\n];\n\nreturn [msg, { payload: { status: 'success' }, statusCode: 200 }];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 1500,
+        "wires": [
+            [
+                "mysql_insert"
+            ],
+            [
+                "http_response"
+            ]
+        ]
+    },
+    {
+        "id": "mysql_insert",
+        "type": "mysql",
+        "z": "a99ef80a0efd40bf",
+        "mydb": "56d1777e6eaf235f",
+        "name": "插入資料庫",
+        "x": 720,
+        "y": 1480,
+        "wires": [
+            [
+                "debug_mysql"
+            ]
+        ]
+    },
+    {
+        "id": "http_response",
+        "type": "http response",
+        "z": "a99ef80a0efd40bf",
+        "name": "回應",
+        "statusCode": "",
+        "headers": {},
+        "x": 730,
+        "y": 1540,
+        "wires": []
+    },
+    {
+        "id": "debug_mysql",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "MySQL除錯",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 920,
+        "y": 1480,
+        "wires": []
+    },
+    {
+        "id": "0df2fe1b85a25767",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 13",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 320,
+        "y": 1580,
         "wires": []
     }
 ]

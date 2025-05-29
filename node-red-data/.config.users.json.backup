@@ -17,13 +17,25 @@
             },
             "dialog": {
                 "export": {
-                    "pretty": true
+                    "pretty": true,
+                    "json-view": true
                 }
             }
         },
         "menu-menu-item-palette": true,
         "debug": {
-            "filter": "filterSelected"
+            "filter": "filterSelected",
+            "filteredNodes": [
+                "2575960f33448def",
+                "86ff789143437ca5",
+                "c5a9a862854446a4",
+                "01d6728f4bc8b878",
+                "f68923ce0bfcf67f",
+                "b91488ba884447fe",
+                "55d5da4ef2daee14",
+                "ade2b1c48aba2452",
+                "fa58d6e5ed3e05de"
+            ]
         }
     }
 }
