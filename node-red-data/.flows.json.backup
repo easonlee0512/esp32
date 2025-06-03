@@ -1146,7 +1146,8 @@
         "y": 1180,
         "wires": [
             [
-                "e1b2c35577f7dc93"
+                "e1b2c35577f7dc93",
+                "d9e5bbb21cee9773"
             ]
         ]
     },
@@ -1189,12 +1190,16 @@
         "style": "",
         "onvalue": "false",
         "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
         "offvalue": "true",
         "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
         "animate": false,
         "className": "",
         "x": 260,
-        "y": 1220,
+        "y": 1240,
         "wires": [
             [
                 "9ed75c76ce1ab1cb"
@@ -1208,7 +1213,7 @@
         "name": "發布鬧鐘設定",
         "topic": "smartlamp/settings/alarm",
         "qos": "0",
-        "retain": "",
+        "retain": "false",
         "respTopic": "",
         "contentType": "",
         "userProps": "",
@@ -1319,7 +1324,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 11",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1328,22 +1333,6 @@
         "statusType": "auto",
         "x": 480,
         "y": 1440,
-        "wires": []
-    },
-    {
-        "id": "07cade5c8d3b2342",
-        "type": "debug",
-        "z": "a99ef80a0efd40bf",
-        "name": "debug 12",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 520,
-        "y": 1260,
         "wires": []
     },
     {
@@ -1518,8 +1507,8 @@
         "z": "a99ef80a0efd40bf",
         "name": "接收久坐記錄",
         "url": "/sitting-record",
-        "method": "POST",
-        "upload": false,
+        "method": "post",
+        "upload": true,
         "swaggerDoc": "",
         "x": 160,
         "y": 1500,
@@ -1598,7 +1587,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "MySQL除錯",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "complete": "payload",
@@ -1614,7 +1603,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 13",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1623,6 +1612,22 @@
         "statusType": "auto",
         "x": 320,
         "y": 1580,
+        "wires": []
+    },
+    {
+        "id": "d9e5bbb21cee9773",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 12",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 500,
+        "y": 1280,
         "wires": []
     }
 ]

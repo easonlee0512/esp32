@@ -29,7 +29,7 @@ const char* ssid = "李翊辰的iPhone";         // 請修改為您的WiFi名稱
 const char* password = "11000000";     // 請修改為您的WiFi密碼
 
 // MQTT設定
-const char* mqtt_server = "0.0.0.0";   // 修改為您電腦的實際IP地址
+const char* mqtt_server = "172.20.10.5";   // 修改為您電腦的實際IP地址
 const int mqtt_port = 1883;                // MQTT伺服器埠號
 const char* mqtt_client_id = "ESP32-SmartLamp"; // MQTT客戶端ID
 const char* mqtt_user = "";                // MQTT使用者名稱，如果有需要
@@ -166,6 +166,8 @@ int alarmCurrentNote = 0;           // 當前播放的音符
 unsigned long alarmLastNoteTime = 0; // 上次播放音符的時間
 unsigned long alarmStartTime = 0;    // 鬧鐘開始時間
 const long alarmDuration = 10000;    // 鬧鐘持續時間 (10秒)
+int lastAlarmHour = -1;              // 記錄上次觸發鬧鐘的小時
+int lastAlarmMinute = -1;            // 記錄上次觸發鬧鐘的分鐘
 
 // API相關設定
 const char* nodeRedApiEndpoint = "http://172.20.10.5:1880/sitting-record";  // Node-RED API端點
@@ -912,16 +914,25 @@ void handleAlarm() {
     return;
   }
   
-  // 檢查是否到達鬧鐘時間
-  if (timeinfo.tm_hour == alarmHour && timeinfo.tm_min == alarmMinute) {
-    // 時間匹配且鬧鐘未觸發
-    if (!alarmTriggered) {
-      Serial.println("鬧鐘時間到！開始播放鬧鐘音樂");
-      alarmTriggered = true;
-      alarmCurrentNote = 0;
-      alarmLastNoteTime = 0; // 重置為0，確保立即開始播放
-      alarmStartTime = currentMillis; // 記錄鬧鐘開始時間
-    }
+  // 檢查是否到達鬧鐘時間，且不是同一分鐘重複觸發
+  if (timeinfo.tm_hour == alarmHour && timeinfo.tm_min == alarmMinute && 
+      (timeinfo.tm_hour != lastAlarmHour || timeinfo.tm_min != lastAlarmMinute)) {
+    // 時間匹配且不是同一分鐘內重複觸發
+    Serial.println("鬧鐘時間到！開始播放鬧鐘音樂");
+    alarmTriggered = true;
+    alarmCurrentNote = 0;
+    alarmLastNoteTime = 0; // 重置為0，確保立即開始播放
+    alarmStartTime = currentMillis; // 記錄鬧鐘開始時間
+    
+    // 記錄當前觸發的時間
+    lastAlarmHour = timeinfo.tm_hour;
+    lastAlarmMinute = timeinfo.tm_min;
+  }
+  
+  // 如果時間已經過了設定的鬧鐘時間，重置最後觸發記錄，為下一次做準備
+  if (timeinfo.tm_hour != alarmHour || timeinfo.tm_min != alarmMinute) {
+    lastAlarmHour = -1;
+    lastAlarmMinute = -1;
   }
 }
 

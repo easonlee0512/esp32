@@ -1146,7 +1146,8 @@
         "y": 1180,
         "wires": [
             [
-                "e1b2c35577f7dc93"
+                "e1b2c35577f7dc93",
+                "d9e5bbb21cee9773"
             ]
         ]
     },
@@ -1155,7 +1156,7 @@
         "type": "function",
         "z": "a99ef80a0efd40bf",
         "name": "function 4",
-        "func": "// 獲取或保持最後的設定值\nvar context = flow.get('alarmSettings') || {\n    hour: 0,\n    minute: 0,\n    enabled: false\n};\n\n// 更新收到的新設定\nif (msg.topic === 'alarm_hour' && msg.payload !== undefined) {\n    context.hour = parseInt(msg.payload) || 0;\n    context.enabled = true;  // 當修改時間時自動啟用\n}\nif (msg.topic === 'alarm_minute' && msg.payload !== undefined) {\n    context.minute = parseInt(msg.payload) || 0;\n    context.enabled = true;  // 當修改時間時自動啟用\n}\nif (msg.topic === 'alarm_switch') {\n    // 反轉開關的值，因為UI開關的值是反的\n    context.enabled = !(msg.payload === true);\n}\n\n// 儲存更新後的設定\nflow.set('alarmSettings', context);\n\n// 確保數值在有效範圍內\ncontext.hour = Math.max(0, Math.min(23, context.hour));\ncontext.minute = Math.max(0, Math.min(59, context.minute));\n\n// 建立鬧鐘設定JSON\nmsg.payload = {\n    \"enabled\": context.enabled,\n    \"hour\": context.hour,\n    \"minute\": context.minute\n};\n\n// 更新節點狀態顯示\nnode.status({\n    fill: context.enabled ? \"green\" : \"red\",\n    shape: \"dot\",\n    text: \"時間: \" + context.hour + \":\" + (context.minute < 10 ? \"0\" : \"\") + context.minute + \", 啟用: \" + context.enabled\n});\n\nreturn msg;",
+        "func": "// 獲取或保持最後的設定值\nvar context = flow.get('alarmSettings') || {\n    hour: 0,\n    minute: 0,\n    enabled: false\n};\n\n// 檢查輸入格式並記錄\nnode.warn(\"輸入訊息: \" + JSON.stringify(msg));\n\n// 更新收到的新設定 - 處理不同可能的格式\nif (msg.topic === 'alarm_hour') {\n    // 處理兩種可能的格式\n    if (typeof msg.payload === 'object' && msg.payload.alarm_hour !== undefined) {\n        context.hour = parseInt(msg.payload.alarm_hour) || 0;\n    } else {\n        context.hour = parseInt(msg.payload) || 0;\n    }\n    context.enabled = true;  // 當修改時間時自動啟用\n}\n\nif (msg.topic === 'alarm_minute') {\n    // 處理兩種可能的格式\n    if (typeof msg.payload === 'object' && msg.payload.alarm_minute !== undefined) {\n        context.minute = parseInt(msg.payload.alarm_minute) || 0;\n    } else {\n        context.minute = parseInt(msg.payload) || 0;\n    }\n    context.enabled = true;  // 當修改時間時自動啟用\n}\n\nif (msg.topic === 'alarm_switch') {\n    // 處理兩種可能的格式\n    if (typeof msg.payload === 'object' && msg.payload.alarm_switch !== undefined) {\n        context.enabled = !(msg.payload.alarm_switch === true);\n    } else {\n        context.enabled = !(msg.payload === true);\n    }\n}\n\n// 儲存更新後的設定\nflow.set('alarmSettings', context);\n\n// 確保數值在有效範圍內\ncontext.hour = Math.max(0, Math.min(23, context.hour));\ncontext.minute = Math.max(0, Math.min(59, context.minute));\n\n// 建立鬧鐘設定JSON\nmsg.payload = {\n    \"enabled\": context.enabled,\n    \"hour\": context.hour,\n    \"minute\": context.minute\n};\n\n// 更新節點狀態顯示\nnode.status({\n    fill: context.enabled ? \"green\" : \"red\",\n    shape: \"dot\",\n    text: \"時間: \" + context.hour + \":\" + (context.minute < 10 ? \"0\" : \"\") + context.minute + \", 啟用: \" + context.enabled\n});\n\n// 設定主題以便發送到 MQTT\nmsg.topic = \"smartlamp/settings/alarm\";\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1189,12 +1190,16 @@
         "style": "",
         "onvalue": "false",
         "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
         "offvalue": "true",
         "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
         "animate": false,
         "className": "",
         "x": 260,
-        "y": 1220,
+        "y": 1240,
         "wires": [
             [
                 "9ed75c76ce1ab1cb"
@@ -1208,7 +1213,7 @@
         "name": "發布鬧鐘設定",
         "topic": "smartlamp/settings/alarm",
         "qos": "0",
-        "retain": "",
+        "retain": "false",
         "respTopic": "",
         "contentType": "",
         "userProps": "",
@@ -1319,7 +1324,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 11",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1328,22 +1333,6 @@
         "statusType": "auto",
         "x": 480,
         "y": 1440,
-        "wires": []
-    },
-    {
-        "id": "07cade5c8d3b2342",
-        "type": "debug",
-        "z": "a99ef80a0efd40bf",
-        "name": "debug 12",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 520,
-        "y": 1260,
         "wires": []
     },
     {
@@ -1598,7 +1587,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "MySQL除錯",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "complete": "payload",
@@ -1614,7 +1603,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 13",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1623,6 +1612,22 @@
         "statusType": "auto",
         "x": 320,
         "y": 1580,
+        "wires": []
+    },
+    {
+        "id": "d9e5bbb21cee9773",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 12",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 500,
+        "y": 1280,
         "wires": []
     }
 ]

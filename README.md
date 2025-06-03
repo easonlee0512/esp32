@@ -121,8 +121,8 @@ smartlamp/settings/sitting_reminder {"reminder_time":300}
 
 這些消息可以通過以下命令監聽：
 ```bash
-mosquitto_sub -h localhost -t "smartlamp/#" -v
-```
+
+```mosquitto_sub -h localhost -t "smartlamp/#" -v
 
 ## 故障排除
 
