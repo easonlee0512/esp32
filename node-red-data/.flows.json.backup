@@ -640,10 +640,10 @@
         "type": "function",
         "z": "a99ef80a0efd40bf",
         "name": "檢測讀書時間",
-        "func": "// 首先正確解析JSON字串\nlet data;\nif (typeof msg.payload === 'string') {\n    try {\n        data = JSON.parse(msg.payload);\n    } catch (e) {\n        node.error(\"JSON解析錯誤: \" + e.message);\n        return null;\n    }\n} else {\n    data = msg.payload;\n}\n\n// 使用持久化儲存\nconst currentSitting = data.sitting === true || data.sitting === \"true\";\nconst lastSitting = context.get('lastSitting', 'file') || false;\nconst duration = parseInt(data.duration || 0);\n\n// 調試輸出\nnode.warn(\"解析後數據: \" + JSON.stringify(data));\nnode.warn(\"狀態: 目前=\" + (currentSitting ? \"坐著\" : \"未坐著\") +\n    \", 上次=\" + (lastSitting ? \"坐著\" : \"未坐著\"));\n\n// 如果剛坐下（狀態從false變為true）\nif (currentSitting && !lastSitting) {\n    // 記錄開始坐下的時間\n    const startTime = new Date();\n    context.set('sittingStartTime', startTime.toISOString(), 'file');\n    context.set('lastSitting', true, 'file');\n\n    node.warn(\"使用者開始坐下: \" + startTime.toISOString());\n    return null;\n}\n\n// 如果剛站起（狀態從true變為false）\nif (!currentSitting && lastSitting) {\n    // 獲取開始時間\n    const startTimeStr = context.get('sittingStartTime', 'file');\n    if (!startTimeStr) {\n        node.warn(\"錯誤: 找不到開始坐下時間\");\n        context.set('lastSitting', false, 'file');\n        return null;\n    }\n\n    // 計算時間差\n    const endTime = new Date();\n    const startTime = new Date(startTimeStr);\n    const durationSec = Math.floor((endTime - startTime) / 1000);\n\n    // 格式化為MySQL日期格式\n    const formatDate = (date) => {\n        return date.toISOString().slice(0, 19).replace('T', ' ');\n    };\n\n    // 創建SQL指令\n    msg.topic = \"INSERT INTO sitting_records (start_time, end_time, duration_seconds) VALUES (?, ?, ?)\";\n    msg.payload = [\n        formatDate(startTime),\n        formatDate(endTime),\n        durationSec\n    ];\n\n    // 重置狀態\n    context.set('lastSitting', false, 'file');\n\n    node.warn(\"使用者站起: 持續了 \" + durationSec + \" 秒\");\n    node.warn(\"SQL: \" + msg.topic);\n    node.warn(\"參數: \" + JSON.stringify(msg.payload));\n\n    return msg;\n}\n\n// 狀態未變化，僅更新當前狀態\ncontext.set('lastSitting', currentSitting, 'file');\nreturn null;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 3,
+        "func": "// 驗證必要欄位\nif (!msg.payload || typeof msg.payload !== 'object') {\n    msg.statusCode = 400;\n    msg.payload = { error: '無效的數據格式' };\n    return [null, msg];\n}\n\nconst { sitting, alarm, duration, threshold } = msg.payload;\n\nif (sitting === undefined || duration === undefined) {\n    msg.statusCode = 400;\n    msg.payload = { error: '缺少必要欄位' };\n    return [null, msg];\n}\n\n// 準備資料庫查詢\nconst now = new Date();\n\n// 明確列出所有欄位（除了自增的 id）\nmsg.topic = 'INSERT INTO sitting_records (start_time, end_time, duration_seconds) VALUES (?, ?, ?)';\n\n// 計算開始時間\nconst endTime = now;\nconst startTime = new Date(now.getTime() - (duration * 1000));\n\n// 格式化時間為 MySQL datetime 格式 (YYYY-MM-DD HH:mm:ss)\nfunction formatDateTime(date) {\n    return date.toISOString().slice(0, 19).replace('T', ' ');\n}\n\nmsg.payload = [\n    formatDateTime(startTime),\n    formatDateTime(endTime),\n    duration\n];\n\nreturn [msg, { payload: { status: 'success' }, statusCode: 200 }];",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
@@ -1156,7 +1156,7 @@
         "type": "function",
         "z": "a99ef80a0efd40bf",
         "name": "function 4",
-        "func": "// 獲取或保持最後的設定值\nvar context = flow.get('alarmSettings') || {\n    hour: 0,\n    minute: 0,\n    enabled: false\n};\n\n// 更新收到的新設定\nif (msg.topic === 'alarm_hour' && msg.payload !== undefined) {\n    context.hour = parseInt(msg.payload) || 0;\n    context.enabled = true;  // 當修改時間時自動啟用\n}\nif (msg.topic === 'alarm_minute' && msg.payload !== undefined) {\n    context.minute = parseInt(msg.payload) || 0;\n    context.enabled = true;  // 當修改時間時自動啟用\n}\nif (msg.topic === 'alarm_switch') {\n    // 反轉開關的值，因為UI開關的值是反的\n    context.enabled = !(msg.payload === true);\n}\n\n// 儲存更新後的設定\nflow.set('alarmSettings', context);\n\n// 確保數值在有效範圍內\ncontext.hour = Math.max(0, Math.min(23, context.hour));\ncontext.minute = Math.max(0, Math.min(59, context.minute));\n\n// 建立鬧鐘設定JSON\nmsg.payload = {\n    \"enabled\": context.enabled,\n    \"hour\": context.hour,\n    \"minute\": context.minute\n};\n\n// 更新節點狀態顯示\nnode.status({\n    fill: context.enabled ? \"green\" : \"red\",\n    shape: \"dot\",\n    text: \"時間: \" + context.hour + \":\" + (context.minute < 10 ? \"0\" : \"\") + context.minute + \", 啟用: \" + context.enabled\n});\n\nreturn msg;",
+        "func": "// 獲取或保持最後的設定值\nvar context = flow.get('alarmSettings') || {\n    hour: 0,\n    minute: 0,\n    enabled: false\n};\n\n// 檢查輸入格式並記錄\nnode.warn(\"輸入訊息: \" + JSON.stringify(msg));\n\n// 更新收到的新設定 - 處理不同可能的格式\nif (msg.topic === 'alarm_hour') {\n    // 處理兩種可能的格式\n    if (typeof msg.payload === 'object' && msg.payload.alarm_hour !== undefined) {\n        context.hour = parseInt(msg.payload.alarm_hour) || 0;\n    } else {\n        context.hour = parseInt(msg.payload) || 0;\n    }\n    context.enabled = true;  // 當修改時間時自動啟用\n}\n\nif (msg.topic === 'alarm_minute') {\n    // 處理兩種可能的格式\n    if (typeof msg.payload === 'object' && msg.payload.alarm_minute !== undefined) {\n        context.minute = parseInt(msg.payload.alarm_minute) || 0;\n    } else {\n        context.minute = parseInt(msg.payload) || 0;\n    }\n    context.enabled = true;  // 當修改時間時自動啟用\n}\n\nif (msg.topic === 'alarm_switch') {\n    // 處理兩種可能的格式\n    if (typeof msg.payload === 'object' && msg.payload.alarm_switch !== undefined) {\n        context.enabled = !(msg.payload.alarm_switch === true);\n    } else {\n        context.enabled = !(msg.payload === true);\n    }\n}\n\n// 儲存更新後的設定\nflow.set('alarmSettings', context);\n\n// 確保數值在有效範圍內\ncontext.hour = Math.max(0, Math.min(23, context.hour));\ncontext.minute = Math.max(0, Math.min(59, context.minute));\n\n// 建立鬧鐘設定JSON\nmsg.payload = {\n    \"enabled\": context.enabled,\n    \"hour\": context.hour,\n    \"minute\": context.minute\n};\n\n// 更新節點狀態顯示\nnode.status({\n    fill: context.enabled ? \"green\" : \"red\",\n    shape: \"dot\",\n    text: \"時間: \" + context.hour + \":\" + (context.minute < 10 ? \"0\" : \"\") + context.minute + \", 啟用: \" + context.enabled\n});\n\n// 設定主題以便發送到 MQTT\nmsg.topic = \"smartlamp/settings/alarm\";\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1540,8 +1540,9 @@
         "type": "function",
         "z": "a99ef80a0efd40bf",
         "name": "處理久坐記錄",
-        "func": "// 驗證必要欄位\nif (!msg.payload || typeof msg.payload !== 'object') {\n    msg.statusCode = 400;\n    msg.payload = { error: '無效的數據格式' };\n    return [null, msg];\n}\n\nconst { sitting, alarm, duration, threshold } = msg.payload;\n\nif (sitting === undefined || duration === undefined) {\n    msg.statusCode = 400;\n    msg.payload = { error: '缺少必要欄位' };\n    return [null, msg];\n}\n\n// 準備資料庫查詢\nconst now = new Date();\nmsg.topic = 'INSERT INTO sitting_records (start_time, end_time, duration_seconds) VALUES (?, ?, ?)';\n\n// 計算開始時間\nconst endTime = now;\nconst startTime = new Date(now.getTime() - (duration * 1000));\n\nmsg.payload = [\n    startTime,\n    endTime,\n    duration\n];\n\nreturn [msg, { payload: { status: 'success' }, statusCode: 200 }];",
+        "func": "// 驗證必要欄位\nif (!msg.payload || typeof msg.payload !== 'object') {\n    msg.statusCode = 400;\n    msg.payload = { error: '無效的數據格式' };\n    return [null, msg];\n}\n\nconst { sitting, alarm, duration, threshold } = msg.payload;\n\nif (sitting === undefined || duration === undefined) {\n    msg.statusCode = 400;\n    msg.payload = { error: '缺少必要欄位' };\n    return [null, msg];\n}\n\n// 準備資料庫查詢\nconst now = new Date();\n\n// 明確列出所有欄位（除了自增的 id）\nmsg.topic = 'INSERT INTO sitting_records (start_time, end_time, duration_seconds) VALUES (?, ?, ?)';\n\n// 計算開始時間\nconst endTime = now;\nconst startTime = new Date(now.getTime() - (duration * 1000));\n\n// 格式化時間為 MySQL datetime 格式 (YYYY-MM-DD HH:mm:ss)\nfunction formatDateTime(date) {\n    return date.toISOString().slice(0, 19).replace('T', ' ');\n}\n\nmsg.payload = [\n    formatDateTime(startTime),\n    formatDateTime(endTime),\n    duration\n];\n\nreturn [msg, { payload: { status: 'success' }, statusCode: 200 }];",
         "outputs": 2,
+        "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
@@ -1550,7 +1551,8 @@
         "y": 1500,
         "wires": [
             [
-                "mysql_insert"
+                "mysql_insert",
+                "f1e8a6137e14420b"
             ],
             [
                 "http_response"
@@ -1587,7 +1589,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "MySQL除錯",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "complete": "payload",
@@ -1603,7 +1605,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 13",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1628,6 +1630,22 @@
         "statusType": "auto",
         "x": 500,
         "y": 1280,
+        "wires": []
+    },
+    {
+        "id": "f1e8a6137e14420b",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 14",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 700,
+        "y": 1620,
         "wires": []
     }
 ]

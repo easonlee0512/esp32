@@ -596,12 +596,12 @@ void handleDHTSensor() {
   
   // 溫度高於25度時發出蜂鳴器警報
   static bool hasBeeped = false;
-  if (temperature > 24.0 && !hasBeeped) {
+  if (temperature > 26.0 && !hasBeeped) {
     // 發出兩聲警報，使用非阻塞方式
     tone(BUZZER_PIN, NOTE_C6, 300);
     hasBeeped = true;
     Serial.println("溫度過高警報！");
-  } else if (temperature <=24.0) {
+  } else if (temperature <=26.0) {
     // 溫度回到閾值以下，重置警報狀態
     hasBeeped = false;
   }

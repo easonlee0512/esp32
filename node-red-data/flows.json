@@ -640,10 +640,10 @@
         "type": "function",
         "z": "a99ef80a0efd40bf",
         "name": "檢測讀書時間",
-        "func": "// 首先正確解析JSON字串\nlet data;\nif (typeof msg.payload === 'string') {\n    try {\n        data = JSON.parse(msg.payload);\n    } catch (e) {\n        node.error(\"JSON解析錯誤: \" + e.message);\n        return null;\n    }\n} else {\n    data = msg.payload;\n}\n\n// 使用持久化儲存\nconst currentSitting = data.sitting === true || data.sitting === \"true\";\nconst lastSitting = context.get('lastSitting', 'file') || false;\nconst duration = parseInt(data.duration || 0);\n\n// 調試輸出\nnode.warn(\"解析後數據: \" + JSON.stringify(data));\nnode.warn(\"狀態: 目前=\" + (currentSitting ? \"坐著\" : \"未坐著\") +\n    \", 上次=\" + (lastSitting ? \"坐著\" : \"未坐著\"));\n\n// 如果剛坐下（狀態從false變為true）\nif (currentSitting && !lastSitting) {\n    // 記錄開始坐下的時間\n    const startTime = new Date();\n    context.set('sittingStartTime', startTime.toISOString(), 'file');\n    context.set('lastSitting', true, 'file');\n\n    node.warn(\"使用者開始坐下: \" + startTime.toISOString());\n    return null;\n}\n\n// 如果剛站起（狀態從true變為false）\nif (!currentSitting && lastSitting) {\n    // 獲取開始時間\n    const startTimeStr = context.get('sittingStartTime', 'file');\n    if (!startTimeStr) {\n        node.warn(\"錯誤: 找不到開始坐下時間\");\n        context.set('lastSitting', false, 'file');\n        return null;\n    }\n\n    // 計算時間差\n    const endTime = new Date();\n    const startTime = new Date(startTimeStr);\n    const durationSec = Math.floor((endTime - startTime) / 1000);\n\n    // 格式化為MySQL日期格式\n    const formatDate = (date) => {\n        return date.toISOString().slice(0, 19).replace('T', ' ');\n    };\n\n    // 創建SQL指令\n    msg.topic = \"INSERT INTO sitting_records (start_time, end_time, duration_seconds) VALUES (?, ?, ?)\";\n    msg.payload = [\n        formatDate(startTime),\n        formatDate(endTime),\n        durationSec\n    ];\n\n    // 重置狀態\n    context.set('lastSitting', false, 'file');\n\n    node.warn(\"使用者站起: 持續了 \" + durationSec + \" 秒\");\n    node.warn(\"SQL: \" + msg.topic);\n    node.warn(\"參數: \" + JSON.stringify(msg.payload));\n\n    return msg;\n}\n\n// 狀態未變化，僅更新當前狀態\ncontext.set('lastSitting', currentSitting, 'file');\nreturn null;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 3,
+        "func": "// 驗證必要欄位\nlet data = msg.payload;\n\n// 如果是字串，嘗試解析 JSON\nif (typeof data === 'string') {\n    try {\n        data = JSON.parse(data);\n    } catch (e) {\n        msg.statusCode = 400;\n        msg.payload = { error: '無效的 JSON 格式' };\n        return [null, msg];\n    }\n}\n\n// 從資料中提取所需欄位\nconst { start_time, end_time, duration_seconds } = data;\n\n// 驗證必要欄位\nif (!start_time || !end_time || duration_seconds === undefined) {\n    msg.statusCode = 400;\n    msg.payload = { error: '缺少必要欄位' };\n    return [null, msg];\n}\n\n// 準備資料庫查詢\nmsg.topic = 'INSERT INTO sitting_records (start_time, end_time, duration_seconds) VALUES (?, ?, ?)';\n\n// 格式化時間為 MySQL datetime 格式 (YYYY-MM-DD HH:mm:ss)\nfunction formatDateTime(dateStr) {\n    const date = new Date(dateStr);\n    return date.toISOString().slice(0, 19).replace('T', ' ');\n}\n\n// 設置查詢參數\nmsg.payload = [\n    formatDateTime(start_time),\n    formatDateTime(end_time),\n    duration_seconds\n];\n\nnode.warn('準備插入資料庫的資料：' + JSON.stringify(msg.payload));\n\nreturn [msg, { payload: { status: 'success' }, statusCode: 200 }];",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
@@ -653,7 +653,8 @@
             [
                 "b91488ba884447fe",
                 "85143f61fdbdd539"
-            ]
+            ],
+            []
         ]
     },
     {
@@ -1531,7 +1532,8 @@
         "y": 1500,
         "wires": [
             [
-                "process_sitting_record"
+                "process_sitting_record",
+                "e85f0e79592ecf08"
             ]
         ]
     },
@@ -1540,8 +1542,9 @@
         "type": "function",
         "z": "a99ef80a0efd40bf",
         "name": "處理久坐記錄",
-        "func": "// 驗證必要欄位\nif (!msg.payload || typeof msg.payload !== 'object') {\n    msg.statusCode = 400;\n    msg.payload = { error: '無效的數據格式' };\n    return [null, msg];\n}\n\nconst { sitting, alarm, duration, threshold } = msg.payload;\n\nif (sitting === undefined || duration === undefined) {\n    msg.statusCode = 400;\n    msg.payload = { error: '缺少必要欄位' };\n    return [null, msg];\n}\n\n// 準備資料庫查詢\nconst now = new Date();\nmsg.topic = 'INSERT INTO sitting_records (start_time, end_time, duration_seconds) VALUES (?, ?, ?)';\n\n// 計算開始時間\nconst endTime = now;\nconst startTime = new Date(now.getTime() - (duration * 1000));\n\nmsg.payload = [\n    startTime,\n    endTime,\n    duration\n];\n\nreturn [msg, { payload: { status: 'success' }, statusCode: 200 }];",
+        "func": "// 驗證必要欄位\nlet data = msg.payload;\n\n// 如果是字串，嘗試解析 JSON\nif (typeof data === 'string') {\n    try {\n        data = JSON.parse(data);\n    } catch (e) {\n        msg.statusCode = 400;\n        msg.payload = { error: '無效的 JSON 格式' };\n        return [null, msg];\n    }\n}\n\n// 從資料中提取所需欄位\nconst { start_time, end_time, duration_seconds } = data;\n\n// 驗證必要欄位\nif (!start_time || !end_time || duration_seconds === undefined) {\n    msg.statusCode = 400;\n    msg.payload = { error: '缺少必要欄位' };\n    return [null, msg];\n}\n\n// 準備資料庫查詢\nmsg.topic = 'INSERT INTO sitting_records (start_time, end_time, duration_seconds) VALUES (?, ?, ?)';\n\n// 格式化時間為 MySQL datetime 格式 (YYYY-MM-DD HH:mm:ss)\nfunction formatDateTime(dateStr) {\n    const date = new Date(dateStr);\n    return date.toISOString().slice(0, 19).replace('T', ' ');\n}\n\n// 設置查詢參數\nmsg.payload = [\n    formatDateTime(start_time),\n    formatDateTime(end_time),\n    duration_seconds\n];\n\nnode.warn('準備插入資料庫的資料：' + JSON.stringify(msg.payload));\n\nreturn [msg, { payload: { status: 'success' }, statusCode: 200 }];",
         "outputs": 2,
+        "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
@@ -1550,7 +1553,8 @@
         "y": 1500,
         "wires": [
             [
-                "mysql_insert"
+                "mysql_insert",
+                "f1e8a6137e14420b"
             ],
             [
                 "http_response"
@@ -1587,7 +1591,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "MySQL除錯",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "complete": "payload",
@@ -1603,7 +1607,7 @@
         "type": "debug",
         "z": "a99ef80a0efd40bf",
         "name": "debug 13",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1628,6 +1632,38 @@
         "statusType": "auto",
         "x": 500,
         "y": 1280,
+        "wires": []
+    },
+    {
+        "id": "f1e8a6137e14420b",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 14",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 700,
+        "y": 1620,
+        "wires": []
+    },
+    {
+        "id": "e85f0e79592ecf08",
+        "type": "debug",
+        "z": "a99ef80a0efd40bf",
+        "name": "debug 15",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 500,
+        "y": 1580,
         "wires": []
     }
 ]
